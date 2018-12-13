@@ -12,19 +12,27 @@ import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Toast;
 
 
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.JsonHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import cz.msebera.android.httpclient.Header;
 
 
 public class MainActivity extends AppCompatActivity {
 
     // Constants:
     // TODO: Create the base URL
-    private final String BASE_URL = "https://apiv2.bitcoin ...";
+    private final String BASE_URL =
+            "https://apiv2.bitcoinaverage.com/indices/global/ticker/short?crypto=BTC&fiat=USD,AUD,BRL,CAD,CNY," +
+                    "EUR,GBP,HKD,JPY,PLN,RUB,SEK,ZAR";
 
     // Member Variables:
     TextView mPriceTextView;
+    String mNameCurrentcy="AUD";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,35 +53,63 @@ public class MainActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
         // TODO: Set an OnItemSelected listener on the spinner
+        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                switch (i){
+                    case 0: {mNameCurrentcy="AUD"; break;}
+                    case 1: {mNameCurrentcy="BRL"; break;}
+                    case 2: {mNameCurrentcy="CAD"; break;}
+                    case 3: {mNameCurrentcy="CNY"; break;}
+                    case 4: {mNameCurrentcy="EUR"; break;}
+                    case 5: {mNameCurrentcy="GBP"; break;}
+                    case 6: {mNameCurrentcy="HKD"; break;}
+                    case 7: {mNameCurrentcy="JPY"; break;}
+                    case 8: {mNameCurrentcy="PLN"; break;}
+                    case 9: {mNameCurrentcy="RUB"; break;}
+                    case 10:{mNameCurrentcy="SEK"; break;}
+                    case 11:{mNameCurrentcy="USD"; break;}
+                    case 12:{mNameCurrentcy="ZAR"; break;}
+                }
+                Log.d("mTest","User selected: " + mNameCurrentcy);
+                RequestParams params = new RequestParams();
+                letsDoSomethingNetworking(params);
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
     }
 
     // TODO: complete the letsDoSomeNetworking() method
-    private void letsDoSomeNetworking(String url) {
+    private void letsDoSomethingNetworking(RequestParams params){
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(BASE_URL, params, new JsonHttpResponseHandler(){
 
-//        AsyncHttpClient client = new AsyncHttpClient();
-//        client.get(WEATHER_URL, params, new JsonHttpResponseHandler() {
-//
-//            @Override
-//            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-//                // called when response HTTP status is "200 OK"
-//                Log.d("Clima", "JSON: " + response.toString());
-//                WeatherDataModel weatherData = WeatherDataModel.fromJson(response);
-//                updateUI(weatherData);
-//            }
-//
-//            @Override
-//            public void onFailure(int statusCode, Header[] headers, Throwable e, JSONObject response) {
-//                // called when response HTTP status is "4XX" (eg. 401, 403, 404)
-//                Log.d("Clima", "Request fail! Status code: " + statusCode);
-//                Log.d("Clima", "Fail response: " + response);
-//                Log.e("ERROR", e.toString());
-//                Toast.makeText(WeatherController.this, "Request Failed", Toast.LENGTH_SHORT).show();
-//            }
-//        });
+          @Override
+          public void onSuccess(int statusCode, Header[] headers, JSONObject response){
+                Log.d("mTest","JSON successed! :"+response);
+                BitcoinDataModel bitcoinDataModel = BitcoinDataModel.fromJSON(response, mNameCurrentcy);
+
+                mPriceTextView.setText(bitcoinDataModel.getqTextValue());
 
 
+          }
+
+          @Override
+          public void onFailure(int statusCode, Header[] headers, Throwable e, JSONObject response) {
+                // called when response HTTP status is "4XX" (eg. 401, 403, 404)
+                Log.d("mTest", "Request fail! Status code: " + statusCode);
+                Log.d("mTest", "Fail response: " + response);
+                Log.e("ERROR", e.toString());
+                Toast.makeText(MainActivity.this, "Request Failed", Toast.LENGTH_SHORT).show();
+            }
+
+        });
     }
-
 
 }
